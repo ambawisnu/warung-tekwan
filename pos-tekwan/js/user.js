@@ -15,23 +15,34 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     });
   }
 
-  function showUserForm(u){ document.getElementById("userForm").hidden=false; document.getElementById("uUsername").value=u?.username||""; document.getElementById("uName").value=u?.name||""; document.getElementById("uRole").value=u?.role||"kasir"; editingUserId=u?.id||null; }
+  function showUserForm(u){ document.getElementById("userForm").hidden=false; document.getElementById("uUsername").value=u?.username||""; document.getElementById("uName").value=u?.name||""; document.getElementById("uPassword").value=""; document.getElementById("uRole").value=u?.role||"kasir"; editingUserId=u?.id||null; }
 
   document.getElementById("btnAddUser").addEventListener("click", ()=> showUserForm(null));
   document.getElementById("cancelUser").addEventListener("click", ()=>{ document.getElementById("userForm").hidden=true; editingUserId=null; });
 
   document.getElementById("saveUser").addEventListener("click", async ()=>{
-    const username = document.getElementById("uUsername").value.trim(); const name = document.getElementById("uName").value.trim(); const role = document.getElementById("uRole").value;
+    const username = document.getElementById("uUsername").value.trim(); const name = document.getElementById("uName").value.trim(); const role = document.getElementById("uRole").value; const password = document.getElementById("uPassword").value.trim();
+    console.log('Saving user:', {username, name, role, password: password ? '***' : ''});
     if(!username || !name){ alert("Username dan nama harus diisi"); return; }
-    if(editingUserId){
-      const user = {id: editingUserId, username, name, role};
-      await updateUser(user);
-    } else {
-      await addUser({username, name, role});
+    if(!editingUserId && !password){ alert("Password harus diisi untuk pengguna baru"); return; }
+    try {
+      if(editingUserId){
+        const user = {id: editingUserId, username, name, role};
+        if(password) user.password = password;
+        console.log('Updating user:', user);
+        await updateUser(user);
+      } else {
+        console.log('Adding user:', {username, name, role, password});
+        await addUser({username, name, role, password});
+      }
+      users = await getUsers();
+      renderUsers();
+      document.getElementById("userForm").hidden=true;
+      document.getElementById("uPassword").value = ""; // clear password field
+    } catch (error) {
+      console.error('Error saving user:', error);
+      alert('Error saving user: ' + error.message);
     }
-    users = await getUsers();
-    renderUsers();
-    document.getElementById("userForm").hidden=true;
   });
 
   // initial

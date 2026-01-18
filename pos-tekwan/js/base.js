@@ -48,6 +48,10 @@ async function addUser(user){
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(user)
   });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to add user');
+  }
   return res.json();
 }
 
@@ -57,6 +61,10 @@ async function updateUser(user){
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(user)
   });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to update user');
+  }
   return res.json();
 }
 

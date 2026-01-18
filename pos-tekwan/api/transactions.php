@@ -2,11 +2,23 @@
 header('Content-Type: application/json');
 require '../config.php';
 
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        $stmt = $pdo->query("SELECT * FROM transactions ORDER BY date DESC");
+        if ($_SESSION['role'] === 'kasir') {
+            $stmt = $pdo->prepare("SELECT * FROM transactions WHERE kasir_id = ? ORDER BY date DESC");
+            $stmt->execute([$_SESSION['user_id']]);
+        } else {
+            $stmt = $pdo->query("SELECT * FROM transactions ORDER BY date DESC");
+        }
         $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($transactions as &$tx) {
             $stmtItems = $pdo->prepare("SELECT * FROM transaction_items WHERE transaction_id = ?");
@@ -24,8 +36,8 @@ switch ($method) {
         }
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare("INSERT INTO transactions (date, total) VALUES (NOW(), ?)");
-            $stmt->execute([$data['total']]);
+            $stmt = $pdo->prepare("INSERT INTO transactions (date, total, kasir_id) VALUES (NOW(), ?, ?)");
+            $stmt->execute([$data['total'], $_SESSION['user_id']]);
             $txId = $pdo->lastInsertId();
             $stmtItem = $pdo->prepare("INSERT INTO transaction_items (transaction_id, menu_id, name, price, qty) VALUES (?, ?, ?, ?, ?)");
             foreach ($data['items'] as $item) {

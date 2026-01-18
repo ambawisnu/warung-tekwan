@@ -1,4 +1,11 @@
-﻿<!doctype html>
+﻿<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+?>
+<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8" />
@@ -15,15 +22,18 @@
     <aside class="sidebar">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div class="brand">Warung Tekwan Model</div>
+        <a href="api/logout.php" style="color: rgba(255,255,255,0.8); text-decoration: none;">Logout</a>
       </div>
       <nav class="nav" id="nav">
         <a href="index.php" data-route="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 13h8V3H3v10zM13 21h8v-8h-8v8zM13 3v8h8V3h-8zM3 21h8v-6H3v6z" fill="#fff"/></svg> Dashboard</a>
         <a href="kasir.php" data-route="kasir"><svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M7 4h10l1 5H6L7 4zM6 10h12v9H6v-9z" fill="#fff"/></svg> Kasir</a>
         <a href="menu.php" data-route="menu" class="active"><svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" fill="#fff"/></svg> Manajemen Menu</a>
         <a href="laporan.php" data-route="reports"><svg class="icon" viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm2 6h14v12H5V9z" fill="#fff"/></svg> Laporan</a>
+        <?php if ($_SESSION['role'] === 'admin'): ?>
         <a href="user.php" data-route="users"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0H4z" fill="#fff"/></svg> Pengguna</a>
+        <?php endif; ?>
       </nav>
-      <div style="margin-top:auto;font-size:13px;color:rgba(255,255,255,0.9)">Kasir: <strong>Kasir 01</strong></div>
+      <div style="margin-top:auto;font-size:13px;color:rgba(255,255,255,0.9)">Kasir: <strong><?php echo $_SESSION['name']; ?></strong></div>
     </aside>
 
     <main class="content">
@@ -39,7 +49,6 @@
           <div class="muted">Manajemen Menu</div>
           <div style="display:flex;gap:8px">
             <button class="btn green" id="btnAddMenu">Tambah Menu</button>
-            <button class="btn gray" id="btnReloadMenu">Reload</button>
           </div>
         </div>
 

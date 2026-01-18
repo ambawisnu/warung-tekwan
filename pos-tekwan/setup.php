@@ -65,10 +65,44 @@ foreach ($tables as $sql) {
     }
 }
 
+// Alter tables to add new columns
+try {
+    $pdo->exec("ALTER TABLE users ADD COLUMN password VARCHAR(255) NOT NULL DEFAULT ''");
+    echo "Users table altered (password added).<br>";
+} catch (PDOException $e) {
+    if ($e->getCode() == '42S21') { // Column already exists
+        echo "Password column already exists.<br>";
+    } else {
+        echo "Error altering users table: " . $e->getMessage() . "<br>";
+    }
+}
+
+try {
+    $pdo->exec("ALTER TABLE transactions ADD COLUMN kasir_id INT");
+    echo "Transactions table altered (kasir_id added).<br>";
+} catch (PDOException $e) {
+    if ($e->getCode() == '42S21') { // Column already exists
+        echo "Kasir_id column already exists.<br>";
+    } else {
+        echo "Error altering transactions table: " . $e->getMessage() . "<br>";
+    }
+}
+
+try {
+    $pdo->exec("ALTER TABLE transactions ADD CONSTRAINT fk_kasir FOREIGN KEY (kasir_id) REFERENCES users(id)");
+    echo "Foreign key added.<br>";
+} catch (PDOException $e) {
+    if ($e->getCode() == '1826') { // Foreign key already exists
+        echo "Foreign key already exists.<br>";
+    } else {
+        echo "Error adding foreign key: " . $e->getMessage() . "<br>";
+    }
+}
+
 // Insert default data
 $defaultUsers = [
-    ['username' => 'admin', 'name' => 'Administrator', 'role' => 'admin'],
-    ['username' => 'kasir1', 'name' => 'Kasir 01', 'role' => 'kasir']
+    ['username' => 'admin', 'name' => 'Administrator', 'role' => 'admin', 'password' => password_hash('admin', PASSWORD_DEFAULT)],
+    ['username' => 'kasir1', 'name' => 'Kasir 01', 'role' => 'kasir', 'password' => password_hash('kasir1', PASSWORD_DEFAULT)]
 ];
 
 $defaultMenu = [
@@ -86,13 +120,23 @@ $defaultTx = [
 ];
 
 try {
-    $stmt = $pdo->prepare("INSERT IGNORE INTO users (username, name, role) VALUES (?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT IGNORE INTO users (username, name, role, password) VALUES (?, ?, ?, ?)");
     foreach ($defaultUsers as $user) {
-        $stmt->execute([$user['username'], $user['name'], $user['role']]);
+        $stmt->execute([$user['username'], $user['name'], $user['role'], $user['password']]);
     }
     echo "Default users inserted.<br>";
 } catch (PDOException $e) {
     echo "Error inserting users: " . $e->getMessage() . "<br>";
+}
+
+// Update password for existing users if empty
+try {
+    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE username = ? AND (password IS NULL OR password = '')");
+    $stmt->execute([password_hash('admin', PASSWORD_DEFAULT), 'admin']);
+    $stmt->execute([password_hash('kasir1', PASSWORD_DEFAULT), 'kasir1']);
+    echo "Passwords updated for existing users.<br>";
+} catch (PDOException $e) {
+    echo "Error updating passwords: " . $e->getMessage() . "<br>";
 }
 
 try {
