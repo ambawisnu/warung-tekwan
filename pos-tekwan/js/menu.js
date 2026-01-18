@@ -1,15 +1,16 @@
 ﻿// Menu management logic
-document.addEventListener("DOMContentLoaded", ()=>{
+document.addEventListener("DOMContentLoaded", async ()=>{
   let editingMenuId = null;
+  let menu = await getMenu();
 
-  function renderMenuTable(){
+  async function renderMenuTable(){
     const tbody = document.querySelector("#menuTable tbody"); tbody.innerHTML="";
-    getMenu().forEach(m=>{
+    menu.forEach(m=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `<td>${m.name}</td><td>${fmt(m.price)}</td><td>${m.stock}</td><td></td>`;
       const actions = tr.querySelector("td:last-child");
       const btnEdit = document.createElement("button"); btnEdit.className="btn blue"; btnEdit.textContent="Edit"; btnEdit.addEventListener("click", ()=>{ showMenuForm(m); });
-      const btnDel = document.createElement("button"); btnDel.className="btn red"; btnDel.textContent="Hapus"; btnDel.addEventListener("click", ()=>{ if(confirm("Hapus menu ini?")){ const list = getMenu().filter(x=>x.id!==m.id); setMenu(list); renderMenuTable(); }} );
+      const btnDel = document.createElement("button"); btnDel.className="btn red"; btnDel.textContent="Hapus"; btnDel.addEventListener("click", async ()=>{ if(confirm("Hapus menu ini?")){ await deleteMenu(m.id); menu = await getMenu(); renderMenuTable(); }} );
       actions.appendChild(btnEdit); actions.appendChild(document.createTextNode(" ")); actions.appendChild(btnDel);
       tbody.appendChild(tr);
     });
@@ -27,17 +28,19 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("btnAddMenu").addEventListener("click", ()=> showMenuForm(null));
   document.getElementById("cancelMenu").addEventListener("click", ()=>{ document.getElementById("menuFormWrap").hidden=true; editingMenuId=null; });
 
-  document.getElementById("saveMenu").addEventListener("click", ()=>{
+  document.getElementById("saveMenu").addEventListener("click", async ()=>{
     const name = document.getElementById("mName").value.trim(); const price = Number(document.getElementById("mPrice").value||0); const stock = Number(document.getElementById("mStock").value||0); const cat = document.getElementById("mCategory").value;
     if(!name || price<=0){ alert("Nama dan harga harus diisi dengan benar."); return; }
-    const menu = getMenu();
     if(editingMenuId){
-      const idx = menu.findIndex(x=>x.id===editingMenuId); if(idx>=0){ menu[idx].name=name; menu[idx].price=price; menu[idx].stock=stock; menu[idx].category=cat; }
-    } else { const id = Date.now(); menu.push({id,name,price,stock,category:cat}); }
-    setMenu(menu); renderMenuTable(); document.getElementById("menuFormWrap").hidden=true;
+      const item = {id: editingMenuId, name, price, stock, category: cat};
+      await updateMenu(item);
+    } else {
+      await addMenu({name, price, stock, category: cat});
+    }
+    menu = await getMenu();
+    renderMenuTable();
+    document.getElementById("menuFormWrap").hidden=true;
   });
-
-  document.getElementById("btnReloadMenu").addEventListener("click", ()=>{ if(confirm("Reset menu ke data awal?")){ localStorage.removeItem("pos_menu_v1"); loadOrInit(); renderMenuTable(); }} );
 
   // initial
   renderMenuTable();

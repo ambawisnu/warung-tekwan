@@ -1,7 +1,7 @@
 ﻿// Dashboard-specific rendering
-document.addEventListener("DOMContentLoaded", ()=>{
-  function renderDashboard(){
-    const tx = getTx();
+document.addEventListener("DOMContentLoaded", async ()=>{
+  async function renderDashboard(){
+    const tx = await getTx();
     const today = new Date().toISOString().slice(0,10);
     const todayTx = tx.filter(t=>t.date.slice(0,10)===today);
     const omzet = todayTx.reduce((s,t)=>s+(t.total||0),0);
@@ -18,5 +18,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
     document.getElementById("weekTotal").textContent = fmt(weekTotal);
   }
 
-  renderDashboard();
+  await renderDashboard();
 });

@@ -2,19 +2,20 @@
 // Perubahan utama: saat mengetik jumlah pada input barang, jika angka melebihi stok,
 // input akan otomatis diset ke nilai stok (mis. stok=20 -> ketik 25 -> otomatis jadi 20).
 // Masih memperbolehkan input kosong saat mengetik; clamp terjadi segera setelah angka > stok.
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   let cart = [];
+  let menu = await getMenu();
 
   function findMenuItem(id) {
-    return getMenu().find(m => m.id === id);
+    return menu.find(m => m.id === id);
   }
 
-  function renderMenuGrid() {
+  async function renderMenuGrid() {
     const grid = document.getElementById('menuGrid');
     if (!grid) return;
     grid.innerHTML = '';
 
-    const visibleMenu = getMenu().filter(item => (item.stock || 0) > 0);
+    const visibleMenu = menu.filter(item => (item.stock || 0) > 0);
 
     if (visibleMenu.length === 0) {
       const msg = document.createElement('div');
@@ -145,8 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function addToCart(id, q = 1) {
-    const menu = getMenu();
-    const item = menu.find(m => m.id === id);
+    const item = findMenuItem(id);
     if (!item) return;
     const existing = cart.find(c => c.id === id);
     const existingQty = existing ? existing.qty : 0;
@@ -157,7 +157,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const toAdd = Math.min(q, available);
-    if (existing) existing.qty += toAdd; else cart.push({ id: item.id, name: item.name, price: item.price, qty: toAdd });
+    if (existing) {
+      existing.qty += toAdd;
+    } else {
+      cart.push({ id: item.id, name: item.name, price: item.price, qty: toAdd });
+    }
     if (toAdd < q) alert('Jumlah ditambahkan sebagian karena stok terbatas.');
     renderCart();
   }
@@ -274,42 +278,48 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Update totals
+    // Update totals (subtotal shown in UI; discount/paid/change handled by recalcTotals)
     const subtotal = cart.reduce((s, it) => s + (it.price * it.qty), 0);
-    const totalEl = document.querySelector('.total-amount');
-    if (totalEl) totalEl.textContent = fmt(subtotal);
-    const subtotalEl = document.getElementById('subtotalAmount');
+    const subtotalEl = document.getElementById('subtotal');
     if (subtotalEl) subtotalEl.textContent = fmt(subtotal);
-    const totalIdEl = document.getElementById('totalAmount');
-    if (totalIdEl) totalIdEl.textContent = fmt(subtotal);
+    // keep any first .total-amount updated for backward compatibility
+    const firstTotal = document.querySelector('.total-amount');
+    if (firstTotal) firstTotal.textContent = fmt(subtotal);
+    // Recalculate derived totals (discount, total, change)
+    recalcTotals();
   }
 
-  function completeTransaction() {
+  async function completeTransaction() {
     if (cart.length === 0) {
       alert('Keranjang kosong.');
       return;
     }
-    const tx = getTx();
     const subtotal = cart.reduce((s, it) => s + (it.price * it.qty), 0);
+    const discountInput = document.getElementById('discount');
+    const paidInput = document.getElementById('paid');
+    const discount = discountInput ? Number(discountInput.value || 0) : 0;
+    const total = Math.max(0, subtotal - discount);
+    const paid = paidInput ? Number(paidInput.value || 0) : 0;
     const newTx = {
-      id: Date.now(),
-      date: new Date().toISOString(),
       items: cart.map(c => ({ id: c.id, name: c.name, price: c.price, qty: c.qty })),
       subtotal,
-      total: subtotal
+      discount,
+      total,
+      paid
     };
-    tx.push(newTx);
-    setTx(tx);
+    await addTx(newTx);
 
     // reduce stock
-    const menu = getMenu();
-    cart.forEach(c => {
-      const idx = menu.findIndex(m => m.id === c.id);
-      if (idx >= 0) {
-        menu[idx].stock = Math.max(0, (menu[idx].stock || 0) - c.qty);
+    for (const c of cart) {
+      const item = menu.find(m => m.id === c.id);
+      if (item) {
+        item.stock = Math.max(0, (item.stock || 0) - c.qty);
+        await updateMenu(item);
       }
-    });
-    setMenu(menu);
+    }
+
+    // reload menu
+    menu = await getMenu();
 
     cart = [];
     renderMenuGrid();
@@ -317,16 +327,35 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Transaksi disimpan.');
   }
 
-  const btnCheckout = document.getElementById('btnCheckout');
-  if (btnCheckout) btnCheckout.addEventListener('click', () => completeTransaction());
+  // Wire up submit/reset and inputs
+  const btnSubmit = document.getElementById('btnSubmit');
+  if (btnSubmit) btnSubmit.addEventListener('click', async () => await completeTransaction());
 
-  const btnClearCart = document.getElementById('btnClearCart');
-  if (btnClearCart) btnClearCart.addEventListener('click', () => {
-    if (confirm('Kosongkan keranjang?')) {
+  const btnReset = document.getElementById('btnReset');
+  if (btnReset) btnReset.addEventListener('click', () => {
+    if (confirm('Kosongkan keranjang dan reset input?')) {
       cart = [];
-      renderCart();
+      const discountInput = document.getElementById('discount'); if (discountInput) discountInput.value = 0;
+      const paidInput = document.getElementById('paid'); if (paidInput) paidInput.value = 0;
+      renderMenuGrid(); renderCart();
     }
   });
+
+  const discountInput = document.getElementById('discount');
+  const paidInput = document.getElementById('paid');
+  if (discountInput) discountInput.addEventListener('input', () => recalcTotals());
+  if (paidInput) paidInput.addEventListener('input', () => recalcTotals());
+
+  // Recalculate totals helper
+  function recalcTotals(){
+    const subtotal = cart.reduce((s, it) => s + (it.price * it.qty), 0);
+    const discount = Number((document.getElementById('discount')?.value) || 0);
+    const paid = Number((document.getElementById('paid')?.value) || 0);
+    const total = Math.max(0, subtotal - (isNaN(discount)?0:discount));
+    const change = Math.max(0, paid - total);
+    const totalEl = document.getElementById('total'); if (totalEl) totalEl.textContent = fmt(total);
+    const changeEl = document.getElementById('change'); if (changeEl) changeEl.textContent = fmt(change);
+  }
 
   // initial render
   renderMenuGrid();
