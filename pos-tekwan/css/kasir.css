@@ -1,13 +1,75 @@
-﻿/* Kasir-specific styles */
-.kasir-wrap{display:grid;grid-template-columns:1fr 360px;gap:12px}
-.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-.menu-item{background:#fff;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;cursor:pointer;min-height:92px}
+﻿/* Kasir-specific styles (updated to keep cart at right side) */
+.kasir-wrap{
+  display:grid;
+  grid-template-columns: 1fr 360px; /* kiri fleksibel, kanan fixed */
+  gap:12px;
+  align-items:start; /* pastikan cart tidak dipaksa turun */
+  min-width:0; /* penting agar child flex/grid bisa overflow dengan benar */
+}
+
+/* Grid menu: gunakan minmax kecil agar lebih banyak kolom muat di lebar yang sama */
+.menu-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* 140px memungkinkan banyak item di satu baris */
+  gap:12px;
+  min-width:0;
+}
+
+/* Item card */
+.menu-item{
+  background:#fff;
+  border-radius:10px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:flex-start;
+  cursor:default;
+  min-height:110px;
+  box-sizing:border-box;
+  width:100%;
+}
+
+/* Judul & harga */
 .menu-item h4{margin:0;font-size:15px}
 .menu-item .price{font-family:'JetBrains Mono', monospace;color:var(--purple);font-weight:700}
-.menu-item .add-row{display:flex;gap:8px;width:100%;align-items:center}
-.qty-btn{background:#f1f1f6;border:none;padding:8px 10px;border-radius:8px;font-weight:700;font-size:16px;min-width:40px}
-.add-to-cart{margin-left:auto;background:var(--success);color:#fff;border:none;padding:8px 10px;border-radius:8px;font-weight:700}
-.cart{position:sticky;top:18px;background:#fff;border-radius:10px;padding:12px;height:calc(100vh - 100px);overflow:auto}
+
+/* Bar kontrol qty + tambah */
+.menu-item .add-row{display:flex;gap:8px;align-items:center}
+.qty-btn{
+  background:#f1f1f6;border:none;padding:8px 10px;border-radius:8px;
+  font-weight:700;font-size:16px;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+}
+.add-to-cart{
+  margin-left:12px;background:var(--success);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;height:36px;
+}
+
+/* input jumlah */
+.qty-input{
+  width:56px;
+  text-align:center;
+  font-weight:700;
+  border-radius:8px;
+  padding:6px;
+  border:1px solid #e6e6ea;
+  font-size:14px;
+  height:36px;
+  box-sizing:border-box;
+}
+
+/* Cart (kanan) */
+.cart{
+  width:100%;
+  max-width:360px; /* konsisten dengan grid-template-columns */
+  position:sticky;
+  top:18px;
+  background:#fff;
+  border-radius:10px;
+  padding:12px;
+  height:calc(100vh - 100px);
+  overflow:auto;
+  box-sizing:border-box;
+}
 .cart h3{margin:0 0 8px 0}
 .cart-list{display:flex;flex-direction:column;gap:8px}
 .cart-item{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px;background:var(--lavender)}
@@ -18,8 +80,9 @@
 .totals .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
 .total-amount{font-family:'JetBrains Mono', monospace;font-size:20px;font-weight:700;color:var(--text-dark)}
 
+/* Small tweak: if the whole page gets narrower than cart width, cart will go below (mobile) */
 @media (max-width:900px){
   .kasir-wrap{grid-template-columns:1fr}
-  .cart{height:auto;position:relative}
+  .cart{height:auto;position:relative;max-width:none}
   .menu-grid{grid-template-columns:repeat(2,1fr)}
 }
