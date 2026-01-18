@@ -1,0 +1,3 @@
+﻿/* Menu management styles - minimal (uses base card/table styles) */
+.form-row{display:flex;gap:8px}
+.form-row .field{flex:1}

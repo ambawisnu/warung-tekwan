@@ -1,0 +1,25 @@
+﻿/* Kasir-specific styles */
+.kasir-wrap{display:grid;grid-template-columns:1fr 360px;gap:12px}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.menu-item{background:#fff;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;cursor:pointer;min-height:92px}
+.menu-item h4{margin:0;font-size:15px}
+.menu-item .price{font-family:'JetBrains Mono', monospace;color:var(--purple);font-weight:700}
+.menu-item .add-row{display:flex;gap:8px;width:100%;align-items:center}
+.qty-btn{background:#f1f1f6;border:none;padding:8px 10px;border-radius:8px;font-weight:700;font-size:16px;min-width:40px}
+.add-to-cart{margin-left:auto;background:var(--success);color:#fff;border:none;padding:8px 10px;border-radius:8px;font-weight:700}
+.cart{position:sticky;top:18px;background:#fff;border-radius:10px;padding:12px;height:calc(100vh - 100px);overflow:auto}
+.cart h3{margin:0 0 8px 0}
+.cart-list{display:flex;flex-direction:column;gap:8px}
+.cart-item{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px;background:var(--lavender)}
+.cart-item .name{flex:1}
+.cart-item .controls{display:flex;gap:6px;align-items:center}
+.control-btn{border:none;padding:6px 8px;border-radius:6px;background:#fff}
+.totals{margin-top:auto;padding-top:10px;border-top:1px dashed #eee}
+.totals .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.total-amount{font-family:'JetBrains Mono', monospace;font-size:20px;font-weight:700;color:var(--text-dark)}
+
+@media (max-width:900px){
+  .kasir-wrap{grid-template-columns:1fr}
+  .cart{height:auto;position:relative}
+  .menu-grid{grid-template-columns:repeat(2,1fr)}
+}
