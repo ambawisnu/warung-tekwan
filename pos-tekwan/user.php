@@ -22,7 +22,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     <aside class="sidebar">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div class="brand">Warung Tekwan Model</div>
-        <a href="api/logout.php" style="color: rgba(255,255,255,0.8); text-decoration: none;">Logout</a>
+        <button onclick="window.location.href='api/logout.php'" style="background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Logout</button>
       </div>
       <nav class="nav" id="nav">
         <a href="index.php" data-route="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 13h8V3H3v10zM13 21h8v-8h-8v8zM13 3v8h8V3h-8zM3 21h8v-6H3v6z" fill="#fff"/></svg> Dashboard</a>

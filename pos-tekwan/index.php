@@ -22,7 +22,7 @@ if (!isset($_SESSION['user_id'])) {
     <aside class="sidebar">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div class="brand">Warung Tekwan Model</div>
-        <a href="api/logout.php" style="color: rgba(255,255,255,0.8); text-decoration: none;">Logout</a>
+        <button onclick="window.location.href='api/logout.php'" style="background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Logout</button>
       </div>
       <nav class="nav" id="nav">
         <a href="index.php" data-route="dashboard" class="active"><svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 13h8V3H3v10zM13 21h8v-8h-8v8zM13 3v8h8V3h-8zM3 21h8v-6H3v6z" fill="#fff"/></svg> Dashboard</a>
@@ -68,7 +68,7 @@ if (!isset($_SESSION['user_id'])) {
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div>
                 <div class="muted">Ringkasan Penjualan (7 hari)</div>
-                <div style="font-weight:700;margin-top:6px">Grafik sederhana (placeholder)</div>
+                <canvas id="salesChart" width="400" height="200"></canvas>
               </div>
               <div style="text-align:right">
                 <div class="muted">Total</div>
@@ -83,6 +83,7 @@ if (!isset($_SESSION['user_id'])) {
   </div>
 
   <script src="js/base.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>
